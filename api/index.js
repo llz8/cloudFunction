@@ -3,7 +3,6 @@ const https = require('https');
 const http = require('http');
 
 // ============ 配置 ============
-// 使用 Vercel 环境变量（推荐）或在此处直接填写
 const CONFIG = {
   token: process.env.WECHAT_TOKEN || 'LLZ',
   appId: process.env.WECHAT_APPID || 'wxfd202bbd13ee2242',
@@ -19,14 +18,20 @@ const CONFIG = {
 module.exports = async (req, res) => {
   try {
     const method = req.method;
+    const url = new URL(req.url, `https://${req.headers.host}`);
+    const params = Object.fromEntries(url.searchParams);
 
     // ========== GET 请求（微信服务器验证） ==========
     if (method === 'GET') {
-      const { signature, timestamp, nonce, echostr } = req.query;
+      const { signature, timestamp, nonce, echostr } = params;
       if (checkSignature(signature, timestamp, nonce)) {
-        return res.status(200).send(echostr);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        return res.end(echostr);
       }
-      return res.status(403).send('验证失败');
+      res.statusCode = 403;
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.end('验证失败');
     }
 
     // ========== POST 请求（接收用户消息） ==========
@@ -36,7 +41,9 @@ module.exports = async (req, res) => {
 
       const msg = parseSimpleXml(body);
       if (!msg || !msg.MsgType) {
-        return res.status(200).send('success');
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        return res.end('success');
       }
 
       const msgType = msg.MsgType;
@@ -77,10 +84,14 @@ module.exports = async (req, res) => {
         '请发送表情包或图片，我会帮你转成可保存的格式~');
     }
 
-    return res.status(405).send('Method Not Allowed');
+    res.statusCode = 405;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.end('Method Not Allowed');
   } catch (err) {
     console.error('处理请求出错:', err);
-    return res.status(500).send('Internal Server Error');
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    return res.end('Internal Server Error');
   }
 };
 
@@ -277,7 +288,8 @@ function sendTextMsg(res, fromUser, toUser, content) {
     `  <Content><![CDATA[${content}]]></Content>\n` +
     `</xml>`;
   res.setHeader('Content-Type', 'text/xml; charset=utf-8');
-  return res.status(200).send(xml);
+  res.statusCode = 200;
+  return res.end(xml);
 }
 
 function sendImageMsg(res, fromUser, toUser, mediaId) {
@@ -292,5 +304,6 @@ function sendImageMsg(res, fromUser, toUser, mediaId) {
     `  </Image>\n` +
     `</xml>`;
   res.setHeader('Content-Type', 'text/xml; charset=utf-8');
-  return res.status(200).send(xml);
+  res.statusCode = 200;
+  return res.end(xml);
 }
