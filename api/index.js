@@ -5,9 +5,9 @@ const http = require('http');
 // ============ 配置 ============
 // 使用 Vercel 环境变量（推荐）或在此处直接填写
 const CONFIG = {
-  token: process.env.WECHAT_TOKEN || '',
-  appId: process.env.WECHAT_APPID || '',
-  appSecret: process.env.WECHAT_APPSECRET || '',
+  token: process.env.WECHAT_TOKEN || 'LLZ',
+  appId: process.env.WECHAT_APPID || 'wxfd202bbd13ee2242',
+  appSecret: process.env.WECHAT_APPSECRET || '921b6a532b9424a25a65910a98452fd3',
 };
 // =================================
 
